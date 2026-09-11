@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>LUDO-FLOW — Autodiagnostic formateur</title>
+  <style>
+    :root{
+      --navy:#0b2440;
+      --navy-2:#163a5f;
+      --turq:#27b8bd;
+      --turq-dark:#178b91;
+      --turq-soft:#eefbfb;
+      --white:#ffffff;
+      --muted:#5d6c7a;
+      --line:#c7eeee;
+      --danger:#9b2c2c;
+      --shadow:0 10px 28px rgba(11,36,64,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:var(--white);
+      color:var(--navy);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height:1.5;
+    }
+    button, input, select, textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:var(--navy-2)}
+    .shell{max-width:1180px;margin:0 auto;padding:20px}
+    .app-header{
+      position:sticky;top:0;z-index:50;background:rgba(255,255,255,.97);
+      border-bottom:1px solid var(--line);backdrop-filter:blur(8px)
+    }
+    .header-inner{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px;min-width:230px}
+    .brand-mark{width:40px;height:40px;border:2px solid var(--turq);border-radius:50%;display:grid;place-items:center;font-weight:800;color:var(--navy)}
+    .brand-title{font-weight:800;letter-spacing:.02em}
+    .brand-sub{font-size:.8rem;color:var(--muted)}
+    .privacy-pill{border:1px solid var(--turq);border-radius:999px;padding:7px 11px;font-size:.82rem;white-space:nowrap;background:var(--turq-soft)}
+    .tabs{max-width:1180px;margin:0 auto;padding:0 20px 10px;display:flex;gap:8px;overflow:auto;scrollbar-width:thin}
+    .tab-btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:999px;padding:9px 13px;white-space:nowrap;font-weight:650}
+    .tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+    .tab-btn:focus-visible,.btn:focus-visible,.scale-btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(39,184,189,.35);outline-offset:2px}
+    main{padding-bottom:56px}
+    .panel{display:none;animation:fade .18s ease}
+    .panel.active{display:block}
+    @keyframes fade{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .hero{min-height:72vh;display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:44px;padding:42px 0}
+    .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:800;color:var(--turq-dark)}
+    h1{font-size:clamp(2.35rem,5vw,4.9rem);line-height:.98;margin:.16em 0 .26em;letter-spacing:-.045em;color:var(--navy)}
+    h2{font-size:clamp(1.7rem,3vw,2.45rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.025em}
+    h3{font-size:1.1rem;margin:0 0 8px}
+    .lead{font-size:1.12rem;max-width:760px;color:var(--navy-2)}
+    .hero-card,.card,.question-card,.result-card,.tool-card,.notice{border:1.5px solid var(--turq);background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .hero-card{padding:26px}
+    .hero-card ul{padding-left:1.1rem;margin:12px 0 0}
+    .meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
+    .chip{border:1px solid var(--turq);background:var(--turq-soft);border-radius:999px;padding:6px 10px;font-size:.86rem}
+    .btn{border:1.5px solid var(--navy);background:var(--navy);color:#fff;border-radius:12px;padding:11px 15px;font-weight:750;transition:.15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.secondary{background:#fff;color:var(--navy);border-color:var(--turq)}
+    .btn.ghost{background:var(--turq-soft);color:var(--navy);border-color:var(--turq)}
+    .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+    .section-head{padding:34px 0 18px;display:flex;justify-content:space-between;gap:20px;align-items:end}
+    .section-head p{margin:0;color:var(--muted);max-width:700px}
+    .progress-wrap{min-width:210px}
+    .progress-label{font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:6px}
+    .progress-track{height:8px;border-radius:999px;background:#edf3f5;overflow:hidden;border:1px solid var(--line)}
+    .progress-fill{height:100%;width:0;background:var(--turq);transition:width .2s ease}
+    .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .card{padding:20px}
+    .field label{display:block;font-weight:700;margin-bottom:7px}
+    .field small{display:block;color:var(--muted);margin-top:6px}
+    select,input[type="text"],input[type="email"],textarea{width:100%;border:1.5px solid var(--turq);border-radius:10px;background:#fff;color:var(--navy);padding:11px 12px}
+    .tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:12px}
+    .tool-card{padding:13px 14px;box-shadow:none;display:flex;gap:10px;align-items:flex-start}
+    .tool-card input{margin-top:4px;accent-color:var(--turq-dark)}
+    .tool-card strong{display:block}
+    .tool-card span{display:block;font-size:.83rem;color:var(--muted);margin-top:2px}
+    .question-list{display:grid;gap:13px}
+    .question-card{padding:17px 18px;box-shadow:none}
+    .question-card.missing{border-color:var(--danger);box-shadow:0 0 0 2px rgba(155,44,44,.08)}
+    .q-top{display:flex;gap:12px;align-items:flex-start}
+    .q-num{flex:0 0 auto;width:30px;height:30px;border:1.5px solid var(--turq);border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.82rem;background:var(--turq-soft)}
+    .q-copy{flex:1}
+    .q-copy p{margin:0;font-weight:650}
+    .q-hint{font-size:.84rem;color:var(--muted);margin-top:4px}
+    .scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:13px}
+    .scale-btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:9px;padding:9px 4px;font-size:.8rem;min-height:45px}
+    .scale-btn.selected{background:var(--navy);border-color:var(--navy);color:#fff}
+    .scale-legend{display:flex;justify-content:space-between;font-size:.76rem;color:var(--muted);margin-top:5px}
+    .adaptive-empty{padding:18px;border:1px dashed var(--turq);border-radius:14px;color:var(--muted);background:var(--turq-soft)}
+    .dropdown-q{margin-top:12px;max-width:560px}
+    .notice{padding:15px 17px;box-shadow:none;background:var(--turq-soft);margin:14px 0}
+    .notice strong{display:block;margin-bottom:3px}
+    .result-hero{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:10px}
+    .score-main{padding:24px;border:2px solid var(--turq);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow);display:flex;align-items:center;gap:24px}
+    .score-ring{--score:0;flex:0 0 auto;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--turq) calc(var(--score)*1%), #e9f4f5 0);position:relative}
+    .score-ring::after{content:"";position:absolute;inset:11px;background:#fff;border-radius:50%}
+    .score-ring span{position:relative;z-index:1;font-size:2rem;font-weight:850}
+    .mini-scores{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .result-card{padding:17px;box-shadow:none}
+    .result-card .value{font-size:1.7rem;font-weight:850;line-height:1}
+    .result-card .label{font-size:.84rem;color:var(--muted);margin-top:4px}
+    .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+    .chart-card{border:1.5px solid var(--turq);border-radius:var(--radius);padding:18px;background:#fff;min-height:430px}
+    .chart-wrap{height:330px;position:relative}
+    canvas{width:100%;height:100%;display:block}
+    .score-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.9rem}
+    .score-table th,.score-table td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
+    .score-table td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+    .feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+    .feedback-item{border:1px solid var(--line);border-left:4px solid var(--turq);border-radius:12px;padding:13px;background:#fff}
+    .feedback-item p{margin:4px 0 0;color:var(--navy-2);font-size:.92rem}
+    .email-box{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:end;margin-top:14px}
+    .email-box .field{min-width:0}
+    .privacy-note{font-size:.82rem;color:var(--muted);margin-top:8px}
+    .refs{display:grid;gap:10px}
+    .ref{border-left:3px solid var(--turq);padding-left:12px}
+    .ref p{margin:2px 0;color:var(--navy-2)}
+    .footer-note{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:.84rem;color:var(--muted)}
+    .hidden{display:none!important}
+    .error-box{display:none;border:1.5px solid var(--danger);color:var(--danger);border-radius:12px;padding:12px 14px;margin:12px 0;background:#fff8f8}
+    .error-box.show{display:block}
+    .kicker{font-size:.82rem;font-weight:800;color:var(--turq-dark);text-transform:uppercase;letter-spacing:.08em}
+    .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .method-grid .card p{margin:7px 0;color:var(--navy-2)}
+    .print-only{display:none}
+    @media (max-width:900px){
+      .hero,.result-hero,.results-grid,.method-grid{grid-template-columns:1fr}
+      .grid-3{grid-template-columns:1fr 1fr}
+      .header-inner{align-items:flex-start}.privacy-pill{display:none}
+      .email-box{grid-template-columns:1fr 1fr}.email-box .field{grid-column:1/-1}
+    }
+    @media (max-width:640px){
+      .shell{padding:14px}.header-inner,.tabs{padding-left:14px;padding-right:14px}
+      .grid-2,.grid-3,.tools-grid,.feedback-grid{grid-template-columns:1fr}
+      .score-main{align-items:flex-start;flex-direction:column}.score-ring{width:112px;height:112px}
+      .scale-btn{font-size:.72rem;padding:7px 2px}
+      .section-head{display:block}.progress-wrap{margin-top:14px}
+      .email-box{grid-template-columns:1fr}
+    }
+    @media print{
+      .app-header,.no-print,#home,#context,#engagement,#learning,#ludo,#method{display:none!important}
+      body{color:#0b2440;background:#fff}
+      #results{display:block!important}
+      .shell{max-width:none;padding:0}
+      .print-only{display:block!important}
+      .results-grid,.feedback-grid{grid-template-columns:1fr 1fr}
+      .chart-card,.result-card,.score-main{box-shadow:none;break-inside:avoid}
+      .chart-card{min-height:390px}
+      a{text-decoration:none;color:#0b2440}
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header no-print">
+    <div class="header-inner">
+      <div class="brand" aria-label="LUDO-FLOW">
+        <div class="brand-mark">LF</div>
+        <div><div class="brand-title">LUDO-FLOW</div><div class="brand-sub">Autodiagnostic formateur</div></div>
+      </div>
+      <div class="privacy-pill">Local • sans compte • sans stockage des réponses</div>
+    </div>
+    <nav class="tabs" aria-label="Navigation de l'autodiagnostic">
+      <button class="tab-btn active" data-tab="home">Accueil</button>
+      <button class="tab-btn" data-tab="context">1. Séance</button>
+      <button class="tab-btn" data-tab="engagement">2. Engagement & flow</button>
+      <button class="tab-btn" data-tab="learning">3. Ancrage & objectifs</button>
+      <button class="tab-btn" data-tab="ludo">4. Ludopédagogie</button>
+      <button class="tab-btn" data-tab="results">5. Résultats</button>
+      <button class="tab-btn" data-tab="method">Méthode & RGPD</button>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section id="home" class="panel active">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">Après une formation animée</div>
+          <h1>Mesurer ce qui a réellement été mis en mouvement.</h1>
+          <p class="lead">Un autodiagnostic pour analyser l’engagement, les conditions de flow, l’ancrage cognitif, les preuves d’atteinte des objectifs, le transfert et la qualité de la ludopédagogie.</p>
+          <div class="meta-row">
+            <span class="chip">8–12 minutes</span>
+            <span class="chip">Score pédagogique distinct du score ludique</span>
+            <span class="chip">Questions adaptatives</span>
+            <span class="chip">2 radars</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn" data-go="context">Commencer l’autodiagnostic</button>
+            <button class="btn secondary" data-go="method">Voir la méthode</button>
+          </div>
+        </div>
+        <aside class="hero-card">
+          <div class="kicker">Principe</div>
+          <h2 style="font-size:1.55rem;margin-top:6px">Le jeu n’est pas une preuve d’apprentissage.</h2>
+          <p>Le diagnostic sépare volontairement l’efficacité pédagogique de la présence de mécanismes ludiques. Une formation peu gamifiée peut donc obtenir un score pédagogique élevé.</p>
+          <ul>
+            <li>Engagement observé et activité réelle des participants</li>
+            <li>Équilibre défi–compétences, buts clairs et feedback</li>
+            <li>Récupération en mémoire, répétition espacée et explicitation</li>
+            <li>Alignement objectifs–activités–évaluation</li>
+            <li>Débriefing et fonction pédagogique du jeu</li>
+          </ul>
+          <div class="notice" style="margin-bottom:0">
+            <strong>Confidentialité par défaut</strong>
+            Les réponses restent en mémoire vive dans cette page. Aucun cookie, traceur, stockage local, formulaire serveur ou service tiers n’est intégré.
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="context" class="panel">
+      <div class="section-head">
+        <div><div class="eyebrow">Étape 1</div><h2>Décrire la séance</h2><p>Ces champs ne sont pas nominatifs. Ils servent à adapter les questions et l’interprétation.</p></div>
+        <div class="progress-wrap"><div class="progress-label"><span>Progression</span><span class="progress-text">0 %</span></div><div class="progress-track"><div class="progress-fill"></div></div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card field">
+          <label for="modality">Modalité principale</label>
+          <select id="modality">
+            <option value="">Choisir…</option>
+            <option value="presentiel">Présentiel</option>
+            <option value="dist_sync">Distanciel synchrone</option>
+            <option value="async">Distanciel asynchrone / e-learning</option>
+            <option value="hybride">Hybride / blended learning</option>
+          </select>
+        </div>
+        <div class="card field">
+          <label for="duration">Format / durée</label>
+          <select id="duration">
+            <option value="">Choisir…</option>
+            <option>Moins de 2 heures</option>
+            <option>Demi-journée</option>
+            <option>1 journée</option>
+            <option>2 journées ou plus</option>
+            <option>Parcours multi-séquences / multi-sessions</option>
+          </select>
+        </div>
+        <div class="card field">
+          <label for="groupSize">Taille du groupe</label>
+          <select id="groupSize">
+            <option value="">Choisir…</option>
+            <option>1 à 6 participants</option>
+            <option>7 à 12 participants</option>
+            <option>13 à 20 participants</option>
+            <option>21 à 30 participants</option>
+            <option>Plus de 30 participants</option>
+            <option>Variable / accès libre</option>
+          </select>
+        </div>
+        <div class="card field">
+          <label for="objectiveType">Objectif dominant</label>
+          <select id="objectiveType">
+            <option value="">Choisir…</option>
+            <option>Acquérir / actualiser des connaissances</option>
+            <option>Maîtriser une procédure ou un savoir-faire</option>
+            <option>Résoudre un problème / raisonner</option>
+            <option>Développer une posture / des soft skills</option>
+            <option>Coopérer / travailler en équipe</option>
+            <option>Faire évoluer une pratique professionnelle</option>
+          </select>
+        </div>
+        <div class="card field">
+          <label for="ludoIntent">Place prévue du ludique</label>
+          <select id="ludoIntent">
+            <option value="">Choisir…</option>
+            <option value="none">Aucune intention de ludification</option>
+            <option value="light">Une activité ludique ponctuelle</option>
+            <option value="several">Plusieurs séquences ludiques</option>
+            <option value="structured">Parcours ou séance structurée par des mécaniques de jeu</option>
+          </select>
+        </div>
+        <div class="card field">
+          <label for="sessionLabel">Intitulé de la formation <span style="font-weight:400">(facultatif)</span></label>
+          <input id="sessionLabel" type="text" maxlength="100" placeholder="Ex. Communication en situation difficile" />
+          <small>Évite d’y saisir un nom de personne, d’établissement ou toute information sensible si tu veux conserver un usage anonyme.</small>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="kicker">Outils et formats</div>
+        <h3 style="margin-top:5px">Sélectionne jusqu’à 5 outils principaux utilisés</h3>
+        <p style="color:var(--muted);margin-top:0">Dix familles courantes sont proposées. Leur sélection déclenche des questions ciblées ; ce n’est pas un classement statistique.</p>
+        <div id="toolsGrid" class="tools-grid"></div>
+        <div id="toolLimit" class="error-box" role="alert">Tu peux sélectionner au maximum 5 outils principaux.</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" data-go="engagement">Continuer</button>
+        <button class="btn secondary" type="button" id="resetBtn1">Réinitialiser</button>
+      </div>
+    </section>
+
+    <section id="engagement" class="panel">
+      <div class="section-head">
+        <div><div class="eyebrow">Étape 2</div><h2>Engagement & conditions de flow</h2><p>Réponds à partir de ce que tu as effectivement observé ou mis en place pendant la séance, pas à partir de l’intention initiale.</p></div>
+        <div class="progress-wrap"><div class="progress-label"><span>Progression</span><span class="progress-text">0 %</span></div><div class="progress-track"><div class="progress-fill"></div></div></div>
+      </div>
+      <div id="engagementQuestions" class="question-list"></div>
+      <div class="btn-row"><button class="btn secondary" data-go="context">Précédent</button><button class="btn" data-go="learning">Continuer</button></div>
+    </section>
+
+    <section id="learning" class="panel">
+      <div class="section-head">
+        <div><div class="eyebrow">Étape 3</div><h2>Ancrage, objectifs & transfert</h2><p>Ici, on cherche des indices de traitement cognitif, de mémorisation active et de progression vers les objectifs.</p></div>
+        <div class="progress-wrap"><div class="progress-label"><span>Progression</span><span class="progress-text">0 %</span></div><div class="progress-track"><div class="progress-fill"></div></div></div>
+      </div>
+      <div id="learningQuestions" class="question-list"></div>
+      <div class="btn-row"><button class="btn secondary" data-go="engagement">Précédent</button><button class="btn" data-go="ludo">Continuer</button></div>
+    </section>
+
+    <section id="ludo" class="panel">
+      <div class="section-head">
+        <div><div class="eyebrow">Étape 4</div><h2>Ludopédagogie & gamification</h2><p>Cette partie distingue la qualité d’intégration du jeu des moteurs motivationnels mobilisés.</p></div>
+        <div class="progress-wrap"><div class="progress-label"><span>Progression</span><span class="progress-text">0 %</span></div><div class="progress-track"><div class="progress-fill"></div></div></div>
+      </div>
+
+      <h3>Qualité de la mise en jeu</h3>
+      <div id="ludoQuestions" class="question-list"></div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="kicker">Questions adaptatives</div>
+        <h3 style="margin-top:5px">Selon les outils déclarés</h3>
+        <div id="adaptiveQuestions"></div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="kicker">Profil Octalysis</div>
+        <h3 style="margin-top:5px">Quels moteurs de motivation étaient réellement présents ?</h3>
+        <p style="color:var(--muted)">Ici, un score élevé ne signifie pas « meilleur ». Le résultat sert à visualiser l’équilibre des moteurs. Les moteurs de pression ou d’urgence doivent être interprétés avec prudence.</p>
+        <div id="octalysisQuestions" class="question-list"></div>
+      </div>
+
+      <div class="btn-row"><button class="btn secondary" data-go="learning">Précédent</button><button class="btn" id="calculateBtn">Calculer mes résultats</button></div>
+      <div id="calcError" class="error-box" role="alert"></div>
+    </section>
+
+    <section id="results" class="panel">
+      <div class="print-only">
+        <div class="eyebrow">LUDO-FLOW — Synthèse imprimée</div>
+        <h1 style="font-size:2.5rem">Autodiagnostic de séance</h1>
+        <p id="printDate"></p>
+      </div>
+      <div class="section-head no-print">
+        <div><div class="eyebrow">Étape 5</div><h2>Résultats</h2><p>Les scores sont des indicateurs d’auto-évaluation, pas une mesure psychométrique validée ni une preuve causale d’apprentissage.</p></div>
+        <div class="progress-wrap"><div class="progress-label"><span>Progression</span><span class="progress-text">0 %</span></div><div class="progress-track"><div class="progress-fill"></div></div></div>
+      </div>
+
+      <div id="noResults" class="notice">
+        <strong>Aucun résultat calculé pour le moment.</strong>
+        Complète le questionnaire puis utilise le bouton « Calculer mes résultats ».
+      </div>
+
+      <div id="resultsContent" class="hidden">
+        <div class="result-hero">
+          <div class="score-main">
+            <div id="globalRing" class="score-ring"><span id="globalScore">0 %</span></div>
+            <div>
+              <div class="kicker">Score pédagogique global</div>
+              <h2 id="globalLabel" style="margin:5px 0 8px">—</h2>
+              <p id="globalInterpretation" style="margin:0;color:var(--navy-2)"></p>
+            </div>
+          </div>
+          <div class="mini-scores">
+            <div class="result-card"><div id="engagementScore" class="value">0 %</div><div class="label">Engagement actif</div></div>
+            <div class="result-card"><div id="anchorScore" class="value">0 %</div><div class="label">Ancrage cognitif</div></div>
+            <div class="result-card"><div id="objectiveScore" class="value">0 %</div><div class="label">Objectifs & preuves</div></div>
+            <div class="result-card"><div id="ludoScore" class="value">0 %</div><div class="label">Indice de ludification</div></div>
+          </div>
+        </div>
+
+        <div class="notice" id="ludoClassification"></div>
+
+        <div class="results-grid">
+          <div class="chart-card">
+            <h3>Radar pédagogique</h3>
+            <p style="margin-top:0;color:var(--muted);font-size:.88rem">Six axes de conception et d’animation.</p>
+            <div class="chart-wrap"><canvas id="pedagogyRadar" width="720" height="520" role="img" aria-label="Radar des scores pédagogiques"></canvas></div>
+            <table class="score-table" id="dimensionTable" aria-label="Scores par dimension"></table>
+          </div>
+          <div class="chart-card">
+            <h3>Profil Octalysis</h3>
+            <p style="margin-top:0;color:var(--muted);font-size:.88rem">Intensité déclarée des huit moteurs motivationnels.</p>
+            <div class="chart-wrap"><canvas id="octalysisRadar" width="720" height="520" role="img" aria-label="Radar Octalysis"></canvas></div>
+            <div id="octalysisText" class="notice" style="margin-bottom:0"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px">
+          <div class="kicker">Lecture opérationnelle</div>
+          <h2 style="font-size:1.65rem;margin-top:5px">Pistes pour la prochaine animation</h2>
+          <div id="feedbackGrid" class="feedback-grid"></div>
+        </div>
+
+        <div class="card no-print" style="margin-top:20px">
+          <div class="kicker">Conserver ou partager</div>
+          <h3 style="margin-top:5px">Recevoir la synthèse par e-mail</h3>
+          <p style="color:var(--muted);margin-top:0">Le bouton ouvre ton logiciel de messagerie avec un message prérempli. L’application n’envoie rien elle-même et ne stocke pas l’adresse.</p>
+          <div class="email-box">
+            <div class="field"><label for="email">Adresse e-mail</label><input id="email" type="email" autocomplete="email" placeholder="prenom.nom@exemple.fr" /></div>
+            <button class="btn" id="emailBtn">Préparer l’e-mail</button>
+            <button class="btn secondary" id="copyBtn">Copier la synthèse</button>
+            <button class="btn ghost" id="printBtn">Imprimer / PDF</button>
+          </div>
+          <div id="emailError" class="error-box" role="alert">Saisis une adresse e-mail valide.</div>
+          <p class="privacy-note">Si tu utilises l’e-mail, l’adresse et la synthèse seront ensuite traitées par ton service de messagerie. Ce traitement est distinct de ce mini-site.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="method" class="panel">
+      <div class="section-head">
+        <div><div class="eyebrow">Repères</div><h2>Méthode, limites & confidentialité</h2><p>Le questionnaire est conçu comme un outil réflexif pour formateurs, à compléter idéalement juste après une animation.</p></div>
+      </div>
+      <div class="method-grid">
+        <div class="card">
+          <div class="kicker">1 — Engagement et flow</div>
+          <h3 style="margin-top:5px">Des conditions, pas une injonction à « divertir »</h3>
+          <p>Les items portent sur le calibrage défi–compétences, la clarté des buts, le feedback, l’autonomie et la concentration. Le flow n’est pas déduit d’un simple sentiment de plaisir.</p>
+        </div>
+        <div class="card">
+          <div class="kicker">2 — Ancrage cognitif</div>
+          <h3 style="margin-top:5px">Faire rappeler, expliquer, espacer et corriger</h3>
+          <p>Les questions recherchent notamment des occasions de récupération active en mémoire, de réactivation espacée, d’explicitation et de feedback correctif.</p>
+        </div>
+        <div class="card">
+          <div class="kicker">3 — Ludopédagogie</div>
+          <h3 style="margin-top:5px">Le jeu comme médiation</h3>
+          <p>L’intégration ludique est analysée par sa fonction pédagogique, la qualité des règles, la sécurité de participation et surtout le débriefing qui relie l’expérience jouée aux apprentissages et au transfert.</p>
+        </div>
+        <div class="card">
+          <div class="kicker">4 — Octalysis</div>
+          <h3 style="margin-top:5px">Huit moteurs, sans transformer le radar en note de vertu</h3>
+          <p>Le profil Octalysis représente l’intensité des moteurs motivationnels. Les moteurs liés à la rareté, à l’imprévisibilité ou à l’évitement de la perte peuvent engager, mais ne sont pas traités comme automatiquement souhaitables.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="kicker">Scoring</div>
+        <h3 style="margin-top:5px">Une conversion simple et lisible</h3>
+        <p>Chaque réponse de 1 à 5 est convertie en 0, 25, 50, 75 ou 100 %. Le score pédagogique global correspond à la moyenne des dimensions Engagement, Flow, Ancrage, Objectifs & preuves et Transfert & feedback. La Ludopédagogie reste affichée séparément afin de ne pas pénaliser une formation efficace qui n’a pas vocation à être gamifiée.</p>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="kicker">RGPD et anonymat</div>
+        <h3 style="margin-top:5px">Ce que fait — et ne fait pas — ce fichier</h3>
+        <p>Le code fourni ne contient aucun tracker, cookie, stockage local, identifiant utilisateur, API, base de données ni transmission des réponses. Les calculs sont exécutés dans le navigateur. L’adresse e-mail saisie à la fin n’est ni mémorisée ni envoyée par le site : elle sert uniquement à préparer un lien <code>mailto:</code>.</p>
+        <p><strong>Attention :</strong> un hébergement web, y compris GitHub Pages, peut traiter des données techniques de connexion (par exemple des journaux ou l’adresse IP) selon sa propre politique. Pour un environnement institutionnel exigeant, vérifie les conditions de l’hébergeur et la doctrine de ton DPO.</p>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="kicker">Références de conception</div>
+        <div class="refs">
+          <div class="ref"><strong>Julian Alvarez — ludopédagogie et serious game</strong><p>Approche mobilisée pour penser le jeu comme médiation, sa structuration, son instrumentalisation et l’importance de l’évaluation/débriefing.</p><a href="https://ludoscience.com/conferences" target="_blank" rel="noopener noreferrer">Ludoscience — travaux et conférences</a></div>
+          <div class="ref"><strong>Yu-kai Chou — Octalysis</strong><p>Les huit moteurs sont utilisés comme grille de lecture motivationnelle, non comme preuve d’apprentissage.</p><a href="https://yukaichou.com/gamification-examples/octalysis-gamification-framework/" target="_blank" rel="noopener noreferrer">Octalysis Framework</a></div>
+          <div class="ref"><strong>Flow — équilibre défi/compétences, buts et feedback</strong><p>La grille reprend les conditions couramment associées au flow, sans prétendre mesurer directement un état psychologique chez les participants.</p></div>
+          <div class="ref"><strong>Récupération en mémoire et espacement</strong><p>Les items d’ancrage intègrent la pratique de récupération, le feedback et la répétition espacée comme leviers de rétention.</p></div>
+          <div class="ref"><strong>CNIL — anonymisation et minimisation</strong><p>L’outil évite la collecte nominative par défaut et précise la limite entre données anonymes et données personnelles.</p><a href="https://www.cnil.fr/fr/technologies/lanonymisation-de-donnees-personnelles" target="_blank" rel="noopener noreferrer">CNIL — anonymisation</a></div>
+        </div>
+      </div>
+
+      <div class="notice">
+        <strong>Limite d’usage</strong>
+        Cet autodiagnostic mesure la perception du formateur sur sa conception et son animation. Pour évaluer les effets réels, croise-le avec des données apprenants : évaluation des acquis, traces d’activité, observation, transfert en situation de travail et, si pertinent, suivi différé.
+      </div>
+      <div class="btn-row"><button class="btn" data-go="context">Utiliser l’outil</button></div>
+    </section>
+
+    <div class="footer-note">LUDO-FLOW — fichier statique autonome. Aucune bibliothèque externe n’est nécessaire pour le questionnaire, le scoring ou les graphiques.</div>
+  </main>
+
+<script>
+(() => {
+  'use strict';
+
+  const DIMENSIONS = {
+    engagement: 'Engagement actif',
+    flow: 'Flow / calibrage',
+    anchor: 'Ancrage cognitif',
+    objectives: 'Objectifs & preuves',
+    transfer: 'Transfert & feedback',
+    ludo: 'Ludopédagogie'
+  };
+
+  const coreQuestions = [
+    {id:'E1', section:'engagement', dim:'engagement', text:'J’ai relié les activités à des situations, problèmes ou usages perçus comme utiles par les participants.', hint:'Utilité explicite et sens donné à l’activité.'},
+    {id:'E2', section:'engagement', dim:'engagement', text:'La majorité des participants a dû produire, choisir, expliquer, décider, manipuler ou résoudre — plutôt que seulement écouter ou regarder.', hint:'On cherche une activité cognitive ou comportementale observable.'},
+    {id:'E3', section:'engagement', dim:'engagement', text:'La participation a été distribuée dans le groupe, sans reposer principalement sur les mêmes personnes.', hint:'En asynchrone : pense aux traces d’activité et aux contributions.'},
+    {id:'E4', section:'engagement', dim:'engagement', text:'J’ai observé des signes d’attention soutenue pendant les séquences importantes.', hint:'Ex. réponses, production, persistance dans la tâche, questions pertinentes.'},
+    {id:'E5', section:'engagement', dim:'engagement', text:'Les participants disposaient d’une marge de choix ou d’autonomie significative dans au moins une partie de l’apprentissage.', hint:'Choix de stratégie, d’ordre, de rôle, d’exemple, de niveau ou de production.'},
+
+    {id:'F1', section:'engagement', dim:'flow', text:'Le but de chaque activité était immédiatement compréhensible : les participants savaient ce qu’ils devaient réussir ou produire.', hint:'Buts clairs avant l’action.'},
+    {id:'F2', section:'engagement', dim:'flow', text:'Le niveau de difficulté était suffisamment stimulant sans être manifestement hors de portée.', hint:'Équilibre entre défi et compétences disponibles.'},
+    {id:'F3', section:'engagement', dim:'flow', text:'J’ai ajusté le niveau de défi, les aides ou les étapes lorsque le groupe avançait trop facilement ou rencontrait un blocage.', hint:'Régulation du défi en cours de séance.'},
+    {id:'F4', section:'engagement', dim:'flow', text:'Les participants recevaient un feedback assez rapidement pour comprendre l’effet de leurs choix et ajuster leur action.', hint:'Feedback du formateur, des pairs, du système ou de la situation.'},
+    {id:'F5', section:'engagement', dim:'flow', text:'Les consignes, règles, interfaces ou outils n’ont pas consommé davantage d’attention que l’apprentissage lui-même.', hint:'Une friction technique ou des règles lourdes peuvent casser l’engagement.'},
+
+    {id:'A1', section:'learning', dim:'anchor', text:'Les participants ont dû rappeler des notions ou procédures de mémoire, sans avoir immédiatement la réponse sous les yeux.', hint:'Quiz de rappel, questionnement, restitution, flash cards, rappel libre…'},
+    {id:'A2', section:'learning', dim:'anchor', text:'Les notions importantes ont été réactivées à plusieurs moments espacés de la séance ou du parcours.', hint:'On évite le “vu une fois, évalué tout de suite”.'},
+    {id:'A3', section:'learning', dim:'anchor', text:'Les participants ont expliqué, reformulé, argumenté ou enseigné une notion à quelqu’un d’autre.', hint:'L’explicitation oblige à organiser les connaissances.'},
+    {id:'A4', section:'learning', dim:'anchor', text:'Les erreurs et réponses incomplètes ont donné lieu à un feedback correctif exploitable.', hint:'Comprendre pourquoi, pas seulement connaître la bonne réponse.'},
+    {id:'A5', section:'learning', dim:'anchor', text:'J’ai aidé les participants à relier les nouveaux apprentissages à des connaissances antérieures, des exemples ou des repères structurants.', hint:'Catégorisation, analogie, carte mentale, synthèse, exemple/contre-exemple…'},
+
+    {id:'O1', section:'learning', dim:'objectives', text:'Les objectifs de formation étaient formulés de manière assez observable pour pouvoir vérifier leur atteinte.', hint:'Ex. analyser, choisir, réaliser, argumenter, appliquer… plutôt que seulement “connaître”.'},
+    {id:'O2', section:'learning', dim:'objectives', text:'Chaque activité importante contribuait explicitement à au moins un objectif de formation.', hint:'Alignement entre activité et finalité.'},
+    {id:'O3', section:'learning', dim:'objectives', text:'L’évaluation ou la mise à l’épreuve demandait aux participants de mobiliser la compétence visée, pas seulement de reconnaître une réponse.', hint:'Quand l’objectif le permet, privilégier production, décision, résolution ou démonstration.'},
+    {id:'O4', section:'learning', dim:'objectives', text:'J’ai recueilli des indices de progression entre le début et la fin de la séquence.', hint:'Positionnement, comparaison avant/après, difficulté croissante, amélioration de production…'},
+    {id:'O5', section:'learning', dim:'objectives', text:'À la fin, je disposais de preuves suffisantes pour dire quels objectifs étaient atteints, partiellement atteints ou encore à travailler.', hint:'Ne pas confondre satisfaction et atteinte des objectifs.'},
+
+    {id:'T1', section:'learning', dim:'transfer', text:'Les participants ont travaillé sur des cas, situations ou décisions proches de leur contexte réel.', hint:'Authenticité et proximité avec l’usage futur.'},
+    {id:'T2', section:'learning', dim:'transfer', text:'Ils ont pu s’exercer plusieurs fois ou améliorer une production après feedback.', hint:'Boucle essai → feedback → nouvel essai.'},
+    {id:'T3', section:'learning', dim:'transfer', text:'J’ai fait varier les situations ou exemples afin d’éviter un apprentissage limité à un seul cas.', hint:'Le transfert gagne à être préparé par la variation des contextes.'},
+    {id:'T4', section:'learning', dim:'transfer', text:'La fin de formation a prévu une projection concrète vers l’après : action, décision, ressource, entraînement ou situation d’application.', hint:'Ce que le participant fera ensuite.'},
+    {id:'T5', section:'learning', dim:'transfer', text:'Une réactivation après la séance était prévue ou rendue possible.', hint:'Ex. quiz différé, ressource de rappel, activité intersession, message de réactivation, entraînement programmé.'},
+
+    {id:'L1', section:'ludo', dim:'ludo', text:'Les mécaniques de jeu utilisées avaient une fonction pédagogique identifiable, au-delà du simple fait de rendre l’activité “sympa”.', hint:'Une mécanique sert un apprentissage, un entraînement, une prise de décision ou une mise en discussion.'},
+    {id:'L2', section:'ludo', dim:'ludo', text:'Les règles étaient assez simples pour que les participants puissent rapidement se concentrer sur le problème à apprendre.', hint:'La complexité des règles doit rester proportionnée au bénéfice pédagogique.'},
+    {id:'L3', section:'ludo', dim:'ludo', text:'Le cadre permettait de participer sans exposition inutile, humiliation ou pression excessive liée à la performance.', hint:'Sécurité psychologique, droit à l’erreur et alternatives de participation.'},
+    {id:'L4', section:'ludo', dim:'ludo', text:'Un débriefing a transformé l’expérience vécue en apprentissages explicites et transférables.', hint:'Que s’est-il passé ? Pourquoi ? Qu’est-ce que cela signifie ? Comment l’utiliser ensuite ?'},
+    {id:'L5', section:'ludo', dim:'ludo', text:'Compétition, temps limité, hasard, points ou récompenses n’ont pas pris le dessus sur la réflexion et les objectifs pédagogiques.', hint:'Le mécanisme de jeu soutient l’activité au lieu de la détourner.'}
+  ];
+
+  const modalityQuestions = {
+    presentiel: [
+      {id:'MP1', dim:'flow', text:'L’organisation matérielle et les transitions entre activités ont limité les temps morts ou les pertes d’attention.'},
+      {id:'MP2', dim:'engagement', text:'La configuration de la salle et du groupe permettait réellement de produire, échanger ou manipuler selon les activités prévues.'},
+      {id:'MP3', dim:'transfer', text:'Le dispositif m’a permis d’observer les productions ou raisonnements d’un nombre suffisant de participants pour réguler la séance.'}
+    ],
+    dist_sync: [
+      {id:'MS1', dim:'flow', text:'Les outils numériques synchrones étaient suffisamment simples et maîtrisés pour ne pas créer de friction notable.'},
+      {id:'MS2', dim:'engagement', text:'Le distanciel comportait plusieurs occasions de participation active : réponse, production, sous-groupe, annotation, décision ou échange.'},
+      {id:'MS3', dim:'engagement', text:'Plusieurs canaux de participation étaient possibles, sans dépendre uniquement de la prise de parole au micro ou de la caméra.'}
+    ],
+    async: [
+      {id:'MA1', dim:'flow', text:'La navigation, les consignes et les attendus permettaient d’avancer sans devoir deviner quoi faire ensuite.'},
+      {id:'MA2', dim:'objectives', text:'La progression dans le parcours et les critères de réussite étaient visibles pour l’apprenant.'},
+      {id:'MA3', dim:'transfer', text:'Les activités asynchrones fournissaient un feedback ou une possibilité de reprise après erreur.'}
+    ],
+    hybride: [
+      {id:'MH1', dim:'engagement', text:'Les participants à distance et en présence disposaient d’occasions comparables de contribuer aux activités importantes.'},
+      {id:'MH2', dim:'flow', text:'Les transitions entre modalités et outils n’ont pas fragmenté l’attention de façon notable.'},
+      {id:'MH3', dim:'transfer', text:'Les activités hybrides étaient conçues pour relier les séquences entre elles plutôt que juxtaposer des formats.'}
+    ]
+  };
+
+  const tools = [
+    {id:'quiz_live', label:'Quiz interactif synchrone', desc:'Kahoot, Wooclap, Quizizz, Mentimeter…', dim:'ludo', q:'Le quiz a servi à faire émerger des raisonnements ou erreurs et a été suivi d’un feedback, plutôt qu’à seulement distribuer des points.'},
+    {id:'poll_live', label:'Sondage / vote / nuage de mots', desc:'En salle ou en visioconférence.', dim:'engagement', q:'Les résultats du sondage ont été exploités dans la discussion ou la progression pédagogique, et pas seulement affichés.'},
+    {id:'collab_board', label:'Tableau collaboratif en ligne', desc:'Miro, Mural, Padlet ou équivalent.', dim:'engagement', q:'Les contributions produites sur le tableau collaboratif ont été structurées, discutées ou réutilisées pour faire avancer l’apprentissage.'},
+    {id:'async_quiz', label:'Quiz / microlearning asynchrone', desc:'Auto-évaluation, répétition, flash cards…', dim:'anchor', q:'L’activité asynchrone permettait de récupérer l’information en mémoire et proposait un feedback ou une nouvelle tentative.'},
+    {id:'interactive_module', label:'Module interactif / embranchements', desc:'H5P, scénario à choix, e-learning interactif…', dim:'flow', q:'Les choix dans le module avaient des conséquences compréhensibles et les interactions servaient le raisonnement plutôt qu’un simple clic de navigation.'},
+    {id:'serious_game', label:'Serious game / simulation numérique', desc:'Jeu sérieux, simulateur, scénario immersif.', dim:'ludo', q:'Le serious game a été suivi d’un débriefing explicite reliant décisions, résultats, objectifs pédagogiques et situations professionnelles.'},
+    {id:'cards', label:'Jeu de cartes pédagogique', desc:'Cartes situations, concepts, rôles, tri, association…', dim:'ludo', q:'Les cartes obligeaient à argumenter, catégoriser, décider ou relier des notions ; elles n’étaient pas seulement un support de tirage.'},
+    {id:'board_dice', label:'Jeu de plateau / dés', desc:'Parcours, hasard encadré, défis sur plateau.', dim:'ludo', q:'Le hasard ou la progression sur le plateau n’a pas déterminé l’apprentissage à la place des choix et raisonnements des participants.'},
+    {id:'escape', label:'Escape game / énigmes', desc:'Présentiel, numérique ou hybride.', dim:'ludo', q:'La résolution des énigmes nécessitait réellement les connaissances ou compétences visées et a été prolongée par un débriefing.'},
+    {id:'roleplay', label:'Jeu de rôle / simulation', desc:'Mise en situation, acteur, patient simulé, scénario professionnel…', dim:'transfer', q:'Le jeu de rôle disposait de critères d’observation et d’un débriefing structuré, avec possibilité d’essayer une autre stratégie.'}
+  ];
+
+  const octalysis = [
+    {id:'OCT1', short:'Sens', label:'Sens / mission', text:'L’activité donnait le sentiment de contribuer à quelque chose d’utile ou de significatif au-delà d’un score.'},
+    {id:'OCT2', short:'Accompl.', label:'Accomplissement / progression', text:'Les participants pouvaient percevoir leur progression, relever un défi ou constater une maîtrise croissante.'},
+    {id:'OCT3', short:'Créativité', label:'Créativité & feedback', text:'Ils pouvaient tester plusieurs stratégies, faire des choix et recevoir un retour sur leurs effets.'},
+    {id:'OCT4', short:'Propriété', label:'Propriété / appropriation', text:'Ils construisaient, choisissaient, personnalisaient ou conservaient quelque chose qui renforçait l’appropriation.'},
+    {id:'OCT5', short:'Social', label:'Influence sociale / relation', text:'Coopération, comparaison, entraide, reconnaissance ou interaction sociale soutenaient l’engagement.'},
+    {id:'OCT6', short:'Rareté', label:'Rareté / contrainte', text:'Des ressources, opportunités ou temps limités rendaient certaines décisions plus engageantes.'},
+    {id:'OCT7', short:'Surprise', label:'Imprévisibilité / curiosité', text:'Des éléments de surprise, d’incertitude ou de découverte entretenaient la curiosité.'},
+    {id:'OCT8', short:'Évitement', label:'Perte / évitement', text:'La possibilité d’échouer, de perdre un avantage ou de subir une conséquence influençait les décisions.'}
+  ];
+
+  const responses = {};
+  let lastResults = null;
+  let currentModalityQuestionIds = [];
+  let currentAdaptiveQuestionIds = [];
+
+  const scaleLabels = ['Pas du tout','Plutôt non','Partiellement','Plutôt oui','Tout à fait'];
+  const percent = v => (v - 1) * 25;
+  const mean = arr => arr.length ? arr.reduce((a,b)=>a+b,0) / arr.length : 0;
+  const esc = str => String(str ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+  function setTab(id){
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === id));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    window.scrollTo({top:0, behavior:'smooth'});
+    updateProgress();
+  }
+
+  function renderScaleQuestion(q, index){
+    const selected = responses[q.id];
+    return `<article class="question-card" data-qcard="${q.id}">
+      <div class="q-top"><div class="q-num">${index}</div><div class="q-copy"><p>${esc(q.text)}</p>${q.hint ? `<div class="q-hint">${esc(q.hint)}</div>`:''}</div></div>
+      <div class="scale" role="group" aria-label="Échelle de réponse">
+        ${scaleLabels.map((lab,i)=>`<button type="button" class="scale-btn ${selected===i+1?'selected':''}" data-q="${q.id}" data-v="${i+1}" aria-pressed="${selected===i+1}">${i+1}<br><span>${lab}</span></button>`).join('')}
+      </div>
+      <div class="scale-legend"><span>1 — Pas du tout</span><span>5 — Tout à fait</span></div>
+    </article>`;
+  }
+
+  function renderCore(){
+    const e = coreQuestions.filter(q=>q.section==='engagement');
+    const l = coreQuestions.filter(q=>q.section==='learning');
+    const lu = coreQuestions.filter(q=>q.section==='ludo');
+    document.getElementById('engagementQuestions').innerHTML = e.map((q,i)=>renderScaleQuestion(q,i+1)).join('') + '<div id="modalityBlock"></div>';
+    document.getElementById('learningQuestions').innerHTML = l.map((q,i)=>renderScaleQuestion(q,i+1)).join('');
+    document.getElementById('ludoQuestions').innerHTML = lu.map((q,i)=>renderScaleQuestion(q,i+1)).join('');
+    bindScaleButtons();
+    renderModalityQuestions();
+  }
+
+  function bindScaleButtons(){
+    document.querySelectorAll('.scale-btn').forEach(btn => {
+      btn.onclick = () => {
+        responses[btn.dataset.q] = Number(btn.dataset.v);
+        const card = btn.closest('.question-card');
+        card?.classList.remove('missing');
+        card?.querySelectorAll('.scale-btn').forEach(x=>{x.classList.toggle('selected',x===btn);x.setAttribute('aria-pressed',x===btn?'true':'false')});
+        updateProgress();
+      };
+    });
+  }
+
+  function renderTools(){
+    document.getElementById('toolsGrid').innerHTML = tools.map(t=>`<label class="tool-card"><input type="checkbox" value="${t.id}" class="tool-check"><span><strong>${esc(t.label)}</strong><span>${esc(t.desc)}</span></span></label>`).join('');
+    document.querySelectorAll('.tool-check').forEach(cb=>cb.addEventListener('change', onToolChange));
+  }
+
+  function selectedTools(){ return [...document.querySelectorAll('.tool-check:checked')].map(x=>x.value); }
+
+  function onToolChange(e){
+    const selected = selectedTools();
+    if(selected.length > 5){
+      e.target.checked = false;
+      document.getElementById('toolLimit').classList.add('show');
+      setTimeout(()=>document.getElementById('toolLimit').classList.remove('show'),3000);
+    }
+    renderAdaptiveQuestions();
+    updateProgress();
+  }
+
+  function renderModalityQuestions(){
+    const mod = document.getElementById('modality').value;
+    const qs = modalityQuestions[mod] || [];
+    currentModalityQuestionIds.forEach(id=>{ if(!qs.some(q=>q.id===id)) delete responses[id]; });
+    currentModalityQuestionIds = qs.map(q=>q.id);
+    const block = document.getElementById('modalityBlock');
+    if(!block) return;
+    if(!qs.length){ block.innerHTML=''; return; }
+    block.innerHTML = `<div class="card" style="margin-top:8px"><div class="kicker">Adapté à la modalité</div><h3 style="margin-top:5px">${mod==='presentiel'?'Présentiel':mod==='dist_sync'?'Distanciel synchrone':mod==='async'?'Asynchrone':'Hybride'}</h3><div class="question-list" style="margin-top:12px">${qs.map((q,i)=>renderScaleQuestion(q,'M'+(i+1))).join('')}</div></div>`;
+    bindScaleButtons();
+  }
+
+  function renderAdaptiveQuestions(){
+    const selected = selectedTools();
+    const qs = selected.map(id=>tools.find(t=>t.id===id)).filter(Boolean).map(t=>({id:'TOOL_'+t.id,dim:t.dim,text:t.q,label:t.label}));
+    currentAdaptiveQuestionIds.forEach(id=>{ if(!qs.some(q=>q.id===id)) delete responses[id]; });
+    currentAdaptiveQuestionIds = qs.map(q=>q.id);
+    const wrap = document.getElementById('adaptiveQuestions');
+    if(!qs.length){
+      wrap.innerHTML = '<div class="adaptive-empty">Aucun outil sélectionné. Le diagnostic ludopédagogique reste possible ; aucune question spécifique à un outil ne sera ajoutée.</div>';
+      return;
+    }
+    wrap.innerHTML = qs.map((q,i)=>`<article class="question-card" data-qcard="${q.id}" style="margin-top:10px">
+      <div class="q-top"><div class="q-num">T${i+1}</div><div class="q-copy"><p><strong>${esc(q.label)}</strong> — ${esc(q.text)}</p></div></div>
+      <div class="dropdown-q"><select class="adaptive-select" data-q="${q.id}" aria-label="Réponse pour ${esc(q.label)}">
+        <option value="">Choisir une réponse…</option>
+        ${scaleLabels.map((lab,j)=>`<option value="${j+1}" ${responses[q.id]===j+1?'selected':''}>${j+1} — ${lab}</option>`).join('')}
+      </select></div>
+    </article>`).join('');
+    wrap.querySelectorAll('.adaptive-select').forEach(sel=>sel.addEventListener('change',()=>{responses[sel.dataset.q]=Number(sel.value)||undefined;sel.closest('.question-card')?.classList.remove('missing');updateProgress();}));
+  }
+
+  function renderOctalysis(){
+    document.getElementById('octalysisQuestions').innerHTML = octalysis.map((q,i)=>`<article class="question-card" data-qcard="${q.id}">
+      <div class="q-top"><div class="q-num">${i+1}</div><div class="q-copy"><p><strong>${esc(q.label)}</strong> — ${esc(q.text)}</p></div></div>
+      <div class="dropdown-q"><select class="oct-select" data-q="${q.id}">
+        <option value="">Choisir l’intensité…</option>
+        <option value="1">1 — Absent ou presque absent</option>
+        <option value="2">2 — Faiblement présent</option>
+        <option value="3">3 — Présent par moments</option>
+        <option value="4">4 — Bien présent</option>
+        <option value="5">5 — Structure fortement l’expérience</option>
+      </select></div>
+    </article>`).join('');
+    document.querySelectorAll('.oct-select').forEach(sel=>sel.addEventListener('change',()=>{responses[sel.dataset.q]=Number(sel.value)||undefined;sel.closest('.question-card')?.classList.remove('missing');updateProgress();}));
+  }
+
+  function allRequiredQuestions(){
+    return [
+      ...coreQuestions,
+      ...(modalityQuestions[document.getElementById('modality').value] || []),
+      ...selectedTools().map(id=>{const t=tools.find(x=>x.id===id);return {id:'TOOL_'+id,dim:t.dim};}),
+      ...octalysis.map(q=>({id:q.id,dim:'oct'}))
+    ];
+  }
+
+  function updateProgress(){
+    const required = allRequiredQuestions();
+    const answered = required.filter(q=>Number.isFinite(responses[q.id])).length;
+    const contextNeeded = ['modality','duration','groupSize','objectiveType','ludoIntent'];
+    const contextAnswered = contextNeeded.filter(id=>document.getElementById(id)?.value).length;
+    const total = required.length + contextNeeded.length;
+    const done = answered + contextAnswered;
+    const p = total ? Math.round(done/total*100) : 0;
+    document.querySelectorAll('.progress-fill').forEach(el=>el.style.width=p+'%');
+    document.querySelectorAll('.progress-text').forEach(el=>el.textContent=p+' %');
+  }
+
+  function dimensionQuestions(dim){
+    const list = coreQuestions.filter(q=>q.dim===dim).map(q=>q.id);
+    const mq = (modalityQuestions[document.getElementById('modality').value] || []).filter(q=>q.dim===dim).map(q=>q.id);
+    const tq = selectedTools().map(id=>tools.find(t=>t.id===id)).filter(t=>t?.dim===dim).map(t=>'TOOL_'+t.id);
+    return [...list,...mq,...tq];
+  }
+
+  function scoreDimension(dim){
+    const ids = dimensionQuestions(dim);
+    return Math.round(mean(ids.map(id=>percent(responses[id])).filter(Number.isFinite)));
+  }
+
+  function classification(score){
+    if(score < 40) return ['À consolider','Plusieurs leviers sont peu présents ou peu observables.'];
+    if(score < 60) return ['Partiel','Des bases sont présentes, mais leur mise en œuvre reste irrégulière.'];
+    if(score < 75) return ['Fonctionnel','La séance mobilise plusieurs leviers de façon cohérente, avec quelques marges de progression.'];
+    if(score < 90) return ['Structuré','Les leviers sont intégrés de manière régulière et observable.'];
+    return ['Très structuré','Les leviers sont présents de façon systématique ; vérifie maintenant leur effet avec des données apprenants.'];
+  }
+
+  function ludoClass(score){
+    if(score < 30) return '<strong>Peu ou pas de ludification repérable.</strong> Ce n’est pas un défaut si le jeu n’était pas nécessaire à l’objectif.';
+    if(score < 50) return '<strong>Éléments ludiques ponctuels.</strong> Certaines mécaniques existent, mais elles ne structurent pas encore l’ensemble de l’expérience.';
+    if(score < 70) return '<strong>Ludification structurée sur plusieurs séquences.</strong> Le jeu remplit une fonction identifiable, à consolider par le débriefing et l’alignement.';
+    return '<strong>Ludification intégrée à la conception.</strong> Les mécaniques de jeu sont fortement présentes ; surveille qu’elles restent au service des apprentissages.';
+  }
+
+  function validateBeforeCalc(){
+    let missingContext = [];
+    ['modality','duration','groupSize','objectiveType','ludoIntent'].forEach(id=>{if(!document.getElementById(id).value) missingContext.push(id)});
+    const required = allRequiredQuestions();
+    const missingQ = required.filter(q=>!Number.isFinite(responses[q.id]));
+    document.querySelectorAll('.question-card').forEach(x=>x.classList.remove('missing'));
+    missingQ.forEach(q=>document.querySelector(`[data-qcard="${q.id}"]`)?.classList.add('missing'));
+    const box = document.getElementById('calcError');
+    if(missingContext.length || missingQ.length){
+      box.textContent = `Il reste ${missingContext.length} champ(s) de contexte et ${missingQ.length} réponse(s) à compléter.`;
+      box.classList.add('show');
+      if(missingContext.length) setTab('context');
+      else {
+        const first = document.querySelector('.question-card.missing');
+        const panel = first?.closest('.panel');
+        if(panel) setTab(panel.id);
+        setTimeout(()=>first?.scrollIntoView({behavior:'smooth',block:'center'}),220);
+      }
+      return false;
+    }
+    box.classList.remove('show');
+    return true;
+  }
+
+  function calculate(){
+    if(!validateBeforeCalc()) return;
+    const dims = {};
+    Object.keys(DIMENSIONS).forEach(d=>dims[d]=scoreDimension(d));
+    const global = Math.round(mean(['engagement','flow','anchor','objectives','transfer'].map(d=>dims[d])));
+    const oct = octalysis.map(q=>({id:q.id,label:q.label,short:q.short,score:percent(responses[q.id])}));
+    lastResults = {dims,global,oct,tools:selectedTools(),context:{
+      modality:document.getElementById('modality').selectedOptions[0].text,
+      duration:document.getElementById('duration').value,
+      groupSize:document.getElementById('groupSize').value,
+      objectiveType:document.getElementById('objectiveType').value,
+      ludoIntent:document.getElementById('ludoIntent').selectedOptions[0].text,
+      sessionLabel:document.getElementById('sessionLabel').value.trim()
+    }};
+    renderResults();
+    setTab('results');
+  }
+
+  function renderResults(){
+    if(!lastResults) return;
+    const {dims,global,oct} = lastResults;
+    document.getElementById('noResults').classList.add('hidden');
+    document.getElementById('resultsContent').classList.remove('hidden');
+    document.getElementById('globalRing').style.setProperty('--score',global);
+    document.getElementById('globalScore').textContent=global+' %';
+    const [label,desc] = classification(global);
+    document.getElementById('globalLabel').textContent=label;
+    document.getElementById('globalInterpretation').textContent=desc;
+    document.getElementById('engagementScore').textContent=dims.engagement+' %';
+    document.getElementById('anchorScore').textContent=dims.anchor+' %';
+    document.getElementById('objectiveScore').textContent=dims.objectives+' %';
+    document.getElementById('ludoScore').textContent=dims.ludo+' %';
+    document.getElementById('ludoClassification').innerHTML=ludoClass(dims.ludo);
+
+    const dimOrder=['engagement','flow','anchor','objectives','transfer','ludo'];
+    document.getElementById('dimensionTable').innerHTML='<thead><tr><th>Dimension</th><th>Score</th></tr></thead><tbody>'+dimOrder.map(d=>`<tr><td>${DIMENSIONS[d]}</td><td>${dims[d]} %</td></tr>`).join('')+'</tbody>';
+
+    drawRadar(document.getElementById('pedagogyRadar'), dimOrder.map(d=>DIMENSIONS[d]), dimOrder.map(d=>dims[d]), 100);
+    drawRadar(document.getElementById('octalysisRadar'), oct.map(x=>x.short), oct.map(x=>x.score), 100);
+
+    const sorted=[...oct].sort((a,b)=>b.score-a.score);
+    const top=sorted.slice(0,3).map(x=>x.label.toLowerCase()).join(', ');
+    const white=mean(oct.filter(x=>['OCT1','OCT2','OCT3'].includes(x.id)).map(x=>x.score));
+    const pressure=mean(oct.filter(x=>['OCT6','OCT7','OCT8'].includes(x.id)).map(x=>x.score));
+    let octText=`Moteurs les plus présents : <strong>${esc(top)}</strong>.`;
+    if(pressure > white + 20) octText += ' Le profil s’appuie davantage sur contrainte, surprise ou évitement que sur sens, accomplissement et créativité : vérifie que l’engagement ne repose pas surtout sur la pression.';
+    else octText += ' Le profil ne montre pas de domination nette des moteurs de pression par rapport aux moteurs de sens, progression et créativité.';
+    document.getElementById('octalysisText').innerHTML=octText;
+
+    renderFeedback();
+    document.getElementById('printDate').textContent='Généré le '+new Date().toLocaleDateString('fr-FR');
+    updateProgress();
+  }
+
+  function renderFeedback(){
+    const d=lastResults.dims;
+    const recs={
+      engagement:['Engagement actif','Réduis les temps où les participants peuvent rester spectateurs. Introduis davantage de choix, de production, d’explication entre pairs ou de décisions liées à leur contexte.'],
+      flow:['Flow / calibrage','Clarifie le but de l’activité, ajuste la difficulté et donne un feedback plus proche de l’action. Simplifie les règles ou l’outil si leur prise en main détourne l’attention.'],
+      anchor:['Ancrage cognitif','Ajoute du rappel sans support, des réactivations espacées, de l’explicitation et des feedbacks correctifs. Une activité ludique peut devenir une occasion de récupération en mémoire.'],
+      objectives:['Objectifs & preuves','Rends les objectifs observables et aligne chaque activité avec une preuve d’apprentissage. Prévois une mise à l’épreuve qui montre ce que le participant sait réellement faire.'],
+      transfer:['Transfert & feedback','Travaille sur des situations proches du réel, fais varier les cas, organise une boucle essai–feedback–nouvel essai et termine par une action concrète à mettre en œuvre.'],
+      ludo:['Ludopédagogie','Relie chaque mécanique de jeu à un objectif précis et protège un temps de débriefing. Si compétition, hasard ou chronomètre dominent la réflexion, réduis leur poids.']
+    };
+    const order=Object.keys(recs).sort((a,b)=>d[a]-d[b]);
+    document.getElementById('feedbackGrid').innerHTML=order.map(dim=>{
+      const score=d[dim];
+      const msg= score>=75 ? 'Point plutôt structuré. Pour aller au-delà de l’auto-évaluation, documente des traces apprenants et vérifie le maintien des acquis ou le transfert.' : recs[dim][1];
+      return `<div class="feedback-item"><strong>${recs[dim][0]} — ${score} %</strong><p>${msg}</p></div>`;
+    }).join('');
+  }
+
+  function drawRadar(canvas, labels, values, max){
+    const ctx=canvas.getContext('2d');
+    const dpr=window.devicePixelRatio||1;
+    const cssW=canvas.clientWidth||720, cssH=canvas.clientHeight||330;
+    canvas.width=Math.round(cssW*dpr);canvas.height=Math.round(cssH*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+    const w=cssW,h=cssH,cx=w/2,cy=h/2+2;
+    const radius=Math.min(w,h)*0.34;
+    const n=labels.length;
+    ctx.clearRect(0,0,w,h);
+    ctx.lineWidth=1;ctx.strokeStyle='#c7eeee';ctx.fillStyle='#0b2440';ctx.font='12px system-ui, sans-serif';
+    for(let level=1;level<=4;level++){
+      const r=radius*level/4;ctx.beginPath();
+      for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+      ctx.closePath();ctx.stroke();
+    }
+    for(let i=0;i<n;i++){
+      const a=-Math.PI/2+i*2*Math.PI/n;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*radius,cy+Math.sin(a)*radius);ctx.stroke();
+      const tx=cx+Math.cos(a)*(radius+24),ty=cy+Math.sin(a)*(radius+24);
+      ctx.textAlign=Math.cos(a)>0.25?'left':Math.cos(a)<-0.25?'right':'center';ctx.textBaseline=Math.sin(a)>0.4?'top':Math.sin(a)<-0.4?'bottom':'middle';
+      wrapCanvasText(ctx,labels[i],tx,ty,120,13);
+    }
+    ctx.beginPath();
+    values.forEach((v,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;const r=radius*Math.max(0,Math.min(max,v))/max;const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+    ctx.closePath();ctx.fillStyle='rgba(39,184,189,.20)';ctx.fill();ctx.strokeStyle='#0b2440';ctx.lineWidth=2.3;ctx.stroke();
+    values.forEach((v,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;const r=radius*v/max;const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;ctx.beginPath();ctx.arc(x,y,4.2,0,Math.PI*2);ctx.fillStyle='#27b8bd';ctx.fill();ctx.strokeStyle='#0b2440';ctx.lineWidth=1.4;ctx.stroke();});
+  }
+
+  function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
+    const words=text.split(' ');let line='',lines=[];
+    words.forEach(word=>{const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test});if(line)lines.push(line);
+    const offset=(lines.length-1)*lineHeight/2;lines.forEach((ln,i)=>ctx.fillText(ln,x,y-offset+i*lineHeight));
+  }
+
+  function summaryText(){
+    if(!lastResults) return '';
+    const r=lastResults; const d=r.dims;
+    const oct=[...r.oct].sort((a,b)=>b.score-a.score).slice(0,3).map(x=>`${x.label} (${x.score} %)`).join(', ');
+    const toolNames=r.tools.map(id=>tools.find(t=>t.id===id)?.label).filter(Boolean).join(', ') || 'Aucun outil principal déclaré';
+    const lowest=Object.keys(DIMENSIONS).sort((a,b)=>d[a]-d[b]).slice(0,2).map(x=>`${DIMENSIONS[x]} (${d[x]} %)`).join(' ; ');
+    return `LUDO-FLOW — Autodiagnostic formateur\n\n${r.context.sessionLabel?`Formation : ${r.context.sessionLabel}\n`:''}Modalité : ${r.context.modality}\nFormat : ${r.context.duration}\nTaille du groupe : ${r.context.groupSize}\nObjectif dominant : ${r.context.objectiveType}\nPlace prévue du ludique : ${r.context.ludoIntent}\nOutils : ${toolNames}\n\nScore pédagogique global : ${r.global} %\nEngagement actif : ${d.engagement} %\nFlow / calibrage : ${d.flow} %\nAncrage cognitif : ${d.anchor} %\nObjectifs & preuves : ${d.objectives} %\nTransfert & feedback : ${d.transfer} %\nIndice de ludification : ${d.ludo} %\n\nMoteurs Octalysis les plus présents : ${oct}\nAxes à travailler en priorité : ${lowest}\n\nInterprétation : autodiagnostic réflexif du formateur ; ne constitue pas une mesure psychométrique ni une preuve causale d’apprentissage.`;
+  }
+
+  function resetAll(){
+    Object.keys(responses).forEach(k=>delete responses[k]);
+    document.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
+    document.querySelectorAll('input[type="text"],input[type="email"]').forEach(i=>i.value='');
+    document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.checked=false);
+    lastResults=null;
+    document.getElementById('resultsContent').classList.add('hidden');
+    document.getElementById('noResults').classList.remove('hidden');
+    renderCore();renderAdaptiveQuestions();renderOctalysis();updateProgress();setTab('home');
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.go)));
+  document.getElementById('modality').addEventListener('change',()=>{renderModalityQuestions();updateProgress();});
+  ['duration','groupSize','objectiveType','ludoIntent'].forEach(id=>document.getElementById(id).addEventListener('change',updateProgress));
+  document.getElementById('calculateBtn').addEventListener('click',calculate);
+  document.getElementById('resetBtn1').addEventListener('click',()=>{if(confirm('Réinitialiser toutes les réponses ?')) resetAll();});
+  document.getElementById('printBtn').addEventListener('click',()=>window.print());
+  document.getElementById('copyBtn').addEventListener('click',async()=>{
+    const text=summaryText();
+    try{await navigator.clipboard.writeText(text);document.getElementById('copyBtn').textContent='Copié';setTimeout(()=>document.getElementById('copyBtn').textContent='Copier la synthèse',1600)}
+    catch{alert('La copie automatique est bloquée par ce navigateur. Sélectionne la synthèse dans l’e-mail ou utilise l’impression PDF.');}
+  });
+  document.getElementById('emailBtn').addEventListener('click',()=>{
+    const email=document.getElementById('email').value.trim();
+    const valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    document.getElementById('emailError').classList.toggle('show',!valid);
+    if(!valid) return;
+    const subject=encodeURIComponent('Résultats LUDO-FLOW — autodiagnostic formateur');
+    const body=encodeURIComponent(summaryText());
+    window.location.href=`mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
+  });
+  window.addEventListener('resize',()=>{if(lastResults) renderResults();});
+
+  renderTools();renderCore();renderAdaptiveQuestions();renderOctalysis();updateProgress();
+})();
+</script>
+</body>
+</html>
